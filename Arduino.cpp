@@ -1,4 +1,3 @@
-
 // Hardware spezifische Imports und Definitionen
 #include <Elegoo_GFX.h>    // Core graphics library
 #include <Elegoo_TFTLCD.h> // Hardware-specific library
@@ -40,10 +39,10 @@ Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 
 // Farben als lesbare Konstanten  16-bit color values
 
-#define  BLACK   0x0000
-#define BLUE    0x001F
-#define RED     0xF800
-#define GREEN   0x07E0
+#define	BLACK   0x0000
+#define	BLUE    0x001F
+#define	RED     0xF800
+#define	GREEN   0x07E0
 #define CYAN    0x07FF
 #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0
@@ -74,29 +73,16 @@ int triangle[9][6]{
 };
 
 // 2 dimensionles integer Array fuer alle möglichen Positionen der Kreise
-int circle [9][2]{
-        {195, 80},
-        {195, 160},
-        {195, 240},
-        {120, 80},
-        {120, 160},
-        {120, 240},
-        {40, 80},
-        {40, 160},
-        {40, 240}
-};
-
-// 2 dimensionles integer Array fuer alle möglichen Positionen der Kreuze
-int cross [9][2]{
-        {195, 80},
-        {195, 160},
-        {195, 240},
-        {120, 80},
-        {120, 160},
-        {120, 240},
-        {40, 80},
-        {40, 160},
-        {40, 240}
+int circle [9][3]{
+        {195, 80, 25},
+        {195, 160, 25},
+        {195, 240, 25},
+        {120, 80, 25},
+        {120, 160, 25},
+        {120, 240, 25},
+        {40, 80, 25},
+        {40, 160, 25},
+        {40, 240, 25}
 };
 
 // Variablen für Begrenzungslinien
@@ -107,52 +93,58 @@ int row2 = 162;
 
 // Ein simples Tic-Tac-Toe Feld zum spielen von 0 bis 8
 char board[9];
-//int moveIndex = 0, x, y;
+int moveIndex = 0, x, y;
 int zahleingabe = 0;
 int moves = 0;
 int zahl; // das gewaehlte Feld
 bool gueltig;
 
 void setup(void) {
-    //Serial.begin(9600);
+    Serial.begin(9600);
+    Serial.println(F("Paint!"));
 
     tft.reset();
 
     uint16_t identifier = tft.readID();
-    if(identifier==0x0101)
+    if(identifier == 0x9325) {
+        Serial.println(F("Found ILI9325 LCD driver"));
+    } else if(identifier == 0x9328) {
+        Serial.println(F("Found ILI9328 LCD driver"));
+    } else if(identifier == 0x4535) {
+        Serial.println(F("Found LGDP4535 LCD driver"));
+    }else if(identifier == 0x7575) {
+        Serial.println(F("Found HX8347G LCD driver"));
+    } else if(identifier == 0x9341) {
+        Serial.println(F("Found ILI9341 LCD driver"));
+    } else if(identifier == 0x8357) {
+        Serial.println(F("Found HX8357D LCD driver"));
+    } else if(identifier==0x0101)
     {
         identifier=0x9341;
         Serial.println(F("Found 0x9341 LCD driver"));
     }else {
         Serial.print(F("Unknown LCD driver chip: "));
+
         identifier=0x9341;
+
     }
 
-    // Den Zufallsgenerator initialisieren
+    // Den Zufallsgenerator inizialisieren damit er nicht immer die selben Zahlen generiert
     randomSeed(analogRead(0));
 
-    tft.begin(identifier);//technisch bedingt
-    tft.setRotation(2);// Bildschirm orientierung
+    tft.begin(identifier);
+    tft.setRotation(2);
 
     tft.fillScreen(BLACK);
 
+
     prepareField();
 
-    pinMode(13, OUTPUT);  //technisch bedingt 
+    pinMode(13, OUTPUT);
 }
 
 void circleAt(int pos){
-    tft.drawCircle(circle[pos][0], circle[pos][1], 25, YELLOW);
-
-}
-
-void crossAt(int pos){
-    int x = cross[pos][0];
-    int y = cross[pos][1];
-    int z = 25;
-    tft.drawLine( x-z, y-z, x+z, y+z, GREEN);
-    tft.drawLine( x+z, y-z, x-z, y+z, GREEN);
-    
+    tft.drawCircle(circle[pos][0], circle[pos][1], circle[pos][2], YELLOW);
 
 }
 
@@ -167,6 +159,7 @@ void prepareField() {
     for (int i=0; i<9; i++) {
         board[i] = ' ';
     }
+
     // Spielfeld aufbauen
     tft.drawLine(20, col1, 220, col1, WHITE);
     tft.drawLine(20, col2, 220, col2, WHITE);
@@ -238,7 +231,7 @@ void loop() {
 
         if ( COMPUTER_TURN ) {
 
-            do {// hier muss eine bessere Strategie implementiert werden!
+            do {
                 zahl =(int)random(0, 9);
                 if(board[zahl] == ' ') {
                     board[zahl] = COMPUTERMOVE;
@@ -266,7 +259,7 @@ void loop() {
                     // scale from 0->1023 to tft.width
                     p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
                     p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
-                    
+
                     if(p.x < row1 && p.y < col1){
                         zahl = 6;
                     }else if(p.x < row2 && p.y < col1){
@@ -295,9 +288,9 @@ void loop() {
                     }
                 }
             }while(!gueltig);
-            
+
             moves++;
-            crossAt(zahl);
+            triangleAt(zahl);
             HUMAN_TURN = false;
             COMPUTER_TURN = true;
         }
@@ -306,20 +299,19 @@ void loop() {
     // Wenn das Spiel unentschieden ausgeht
     if (! gameOver(board) && moves == 9){
         tft.setRotation(tft.getRotation()+1);
-        tft.setCursor(0, 2);
+        tft.setCursor(0, 30);
         tft.setTextColor(RED);
         tft.setTextSize(2);
         tft.println("It's a draw");
     }else
     {   // Den Gewinner ernennen
         tft.setRotation(tft.getRotation()+1);
-        tft.setCursor(0, 2);
+        tft.setCursor(0, 30);
         tft.setTextColor(RED);
         tft.setTextSize(2);
         if (COMPUTER_TURN ) {
-            tft.print("You win! Gl");
-            tft.print(char(0x81));
-            tft.println("ckwunsch!");
+            tft.println("You win!");
+            tft.println("Glueckwunsch!");
         }
         else if (HUMAN_TURN) {
             tft.println("Computer wins!");
@@ -335,5 +327,4 @@ void loop() {
     prepareField();
     moves = 0;
 }
-
 
