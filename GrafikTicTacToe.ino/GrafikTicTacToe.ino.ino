@@ -63,6 +63,37 @@ Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 #define PENRADIUS 3
 int oldcolor, currentcolor;
 
+int triangle[9][6]{
+
+ {220, 80, 170, 50, 170, 110},
+ {220, 160, 170, 130, 170, 190},
+ {220, 240, 170, 210, 170, 270},
+ {150, 80, 100, 50, 100, 110},
+ {150, 160, 100, 130, 100, 190},
+ {150, 240, 100, 210, 100, 270},
+ {70, 80, 20, 50, 20, 110},
+ {70, 160, 20, 130, 20, 190},
+ {70, 240, 20, 210, 20, 270}
+};
+
+int circle [9][3]{
+ 
+ {195, 80, 25},
+ {195, 160, 25},
+ {195, 240, 25},
+ {120, 80, 25},
+ {120, 160, 25},
+ {120, 240, 25},
+ {40, 80, 25},
+ {40, 160, 25},
+ {40, 240, 25}
+};
+
+int col1 = 120;
+int col2 = 200;
+int row1 = 82;
+int row2 = 162;
+
 void setup(void) {
   Serial.begin(9600);
   Serial.println(F("Paint!"));
@@ -98,13 +129,39 @@ void setup(void) {
 
   tft.fillScreen(BLACK);
 
-  tft.drawLine(20, 120, 220, 120, YELLOW);
-  tft.drawLine(20, 200, 220, 200, YELLOW);
-  tft.drawLine(82, 40, 82, 280, WHITE);
-  tft.drawLine(162, 40, 162, 280, WHITE);
+
+  tft.drawLine(20, col1, 220, col1, RED);
+  tft.drawLine(20, col2, 220, col2, YELLOW);
+  tft.drawLine(row1, 40, row1, 280, GREEN);
+  tft.drawLine(row2, 40, row2, 280, WHITE);
+
+
+/*
+for(int x = 0; x < 9; x++){
+  triangleAt(x);
   
+}
+
+for(int y = 0; y < 9; y++){
+  circleAt(y);
+  
+}
+*/
+
   pinMode(13, OUTPUT);
 }
+
+void circleAt(int pos){
+  tft.drawCircle(circle[pos][0], circle[pos][1], circle[pos][2], YELLOW);
+  
+}
+
+void triangleAt(int pos){
+  tft.drawTriangle(triangle[pos][0], triangle[pos][1], triangle[pos][2], triangle[pos][3], triangle[pos][4], triangle[pos][5], BLUE);
+}
+
+
+
 
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
@@ -141,46 +198,30 @@ void loop()
     //p.x = tft.width()-map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
     p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
      //p.y = map(p.y, TS_MINY, TS_MAXY, tft.height(), 0);
-    /*
-    Serial.print("("); Serial.print(p.x);
-    Serial.print(", "); Serial.print(p.y);
-    Serial.println(")");
-    */
-    if (p.y < BOXSIZE) {
-       oldcolor = currentcolor;
+    
 
-       if (p.x < BOXSIZE) { 
-         currentcolor = RED; 
-         tft.drawRect(0, 0, BOXSIZE, BOXSIZE, WHITE);
-       } else if (p.x < BOXSIZE*2) {
-         currentcolor = YELLOW;
-         tft.drawRect(BOXSIZE, 0, BOXSIZE, BOXSIZE, WHITE);
-       } else if (p.x < BOXSIZE*3) {
-         currentcolor = GREEN;
-         tft.drawRect(BOXSIZE*2, 0, BOXSIZE, BOXSIZE, WHITE);
-       } else if (p.x < BOXSIZE*4) {
-         currentcolor = CYAN;
-         tft.drawRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, WHITE);
-       } else if (p.x < BOXSIZE*5) {
-         currentcolor = BLUE;
-         tft.drawRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, WHITE);
-       } else if (p.x < BOXSIZE*6) {
-         currentcolor = MAGENTA;
-         tft.drawRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, WHITE);
-       }
 
-       if (oldcolor != currentcolor) {
-          if (oldcolor == RED) tft.fillRect(0, 0, BOXSIZE, BOXSIZE, RED);
-          if (oldcolor == YELLOW) tft.fillRect(BOXSIZE, 0, BOXSIZE, BOXSIZE, YELLOW);
-          if (oldcolor == GREEN) tft.fillRect(BOXSIZE*2, 0, BOXSIZE, BOXSIZE, GREEN);
-          if (oldcolor == CYAN) tft.fillRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, CYAN);
-          if (oldcolor == BLUE) tft.fillRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, BLUE);
-          if (oldcolor == MAGENTA) tft.fillRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, MAGENTA);
-       }
+    if(p.x < row1 && p.y < col1){
+      triangleAt(6);
+    }else if(p.x < row2 && p.y < col1){
+      triangleAt(3);
+    }else if(p.y < col1){
+      triangleAt(0);
+    }else if(p.x < row1 && p.y < col2){
+      triangleAt(7);
+    }else if(p.x < row2 && p.y < col2){
+      triangleAt(4);
+    }else if(p.y < col2){
+      triangleAt(1);
+    }else if(p.x < row1){
+      triangleAt(8);
+    }else if(p.x < row2){
+      triangleAt(5);
+    }else
+    {triangleAt(2);
     }
-    if (((p.y-PENRADIUS) > BOXSIZE) && ((p.y+PENRADIUS) < tft.height())) {
-      tft.fillCircle(p.x, p.y, PENRADIUS, currentcolor);
-    }
+    
+    
   }
 }
 
