@@ -56,7 +56,7 @@ void initialise(char board[])
 
     // Für den Anfang eines leeres Feld inizialisieren
     for (int i=0; i<9; i++) {
-            board[i] = ' ';
+            board[i] = '_';
     }
 
     return;
@@ -73,30 +73,30 @@ void declareWinner(int whoseTurn)
 }
 
 // Prüfen ob eine Linie mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool rowCrossed(char board[]) {
+bool rowCrossed(char board[],char player) {
 
 
-        if (board[0] == board[1] && board[1] == board[2] && board[2] != ' ')
+        if (board[0] == board[1] && board[1] == board[2] && board[2] == player)
             return(true);
-        if (board[3] == board[4] && board[4] == board[5] && board[5] != ' ')
+        if (board[3] == board[4] && board[4] == board[5] && board[5] == player)
             return(true);
-        if (board[6] == board[7] && board[7] == board[8] && board[8] != ' ')
+        if (board[6] == board[7] && board[7] == board[8] && board[8] == player)
             return (true);
 
     return(false);
 }
 
 // Prüfen ob eine Spalte mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool columnCrossed(char board[]) {
+bool columnCrossed(char board[],char player) {
 
 
-        if (board[0] == board[3] && board[3] == board[6] && board[6] != ' ') {
+        if (board[0] == board[3] && board[3] == board[6] && board[6] == player) {
             return(true);
         }
-        if (board[1] == board[4] && board[4] == board[7] && board[7] != ' ') {
+        if (board[1] == board[4] && board[4] == board[7] && board[7] == player) {
             return(true);
         }
-        if (board[2] == board[5] && board[5] == board[8] && board[8] != ' ') {
+        if (board[2] == board[5] && board[5] == board[8] && board[8] == player) {
             return (true);
         }
 
@@ -104,13 +104,13 @@ bool columnCrossed(char board[]) {
 }
 
 // Prüfen ob eine Diagonale mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool diagonalCrossed(char board[])
+bool diagonalCrossed(char board[],char player)
 {
-    if (board[0] == board[4] && board[4] == board[8] && board[8] != ' ') {
+    if (board[0] == board[4] && board[4] == board[8] && board[8] == player) {
         return (true);
     }
 
-    if (board[2] == board[4] && board[4] == board[6] && board[6] != ' ') {
+    if (board[2] == board[4] && board[4] == board[6] && board[6] == player) {
         return (true);
     }
 
@@ -118,14 +118,130 @@ bool diagonalCrossed(char board[])
 }
 
 // Die Funktion gibt true zurück fals eine der drei aufgerufenen Prüfungen erflogreich ist ansonsten false
-bool gameOver(char board[])
+
+bool winning(char board[], char player)
 {
-    return(rowCrossed(board) || columnCrossed(board) || diagonalCrossed(board) );
+    return(rowCrossed(board,player) || columnCrossed(board,player) || diagonalCrossed(board,player) );
+}
+
+
+
+bool isMovesLeft(char board[])
+{
+    for (int i = 0; i<9; i++){
+        if (board[i]=='_'){
+            return true;
+        }
+    }
+    return false;
+}
+// This is the minimax function. It considers all
+// the possible ways the game can go and returns
+// the value of the board
+int minimax(char board[9], int depth, bool isMax) {
+    if (winning(board, HUMANMOVE)){
+        return -10;
+    }
+    else if (winning(board, COMPUTERMOVE)){
+        return 10;
+    }
+    else if (!isMovesLeft(board)){
+        return 0;
+    }
+
+    // If this maximizer's move
+    if (isMax) {
+        int best = -1000;
+
+        // Traverse all cells
+        for (int i = 0; i<9; i++) {
+                // Check if cell is empty
+                if (board[i]=='_') {
+                    // Make the move
+                    board[i] = COMPUTERMOVE;
+
+                    // Call minimax recursively and choose
+                    // the maximum value
+                    best = max( best, minimax(board, depth+1, !isMax) );
+
+                    // Undo the move
+                    board[i] = '_';
+                }
+
+        }
+        return best;
+    }
+        // If this minimizer's move
+    else
+    {
+        int best = 1000;
+
+        // Traverse all cells
+        for (int k = 0; k<9; k++)
+        {
+
+                // Check if cell is empty
+                if (board[k]=='_')
+                {
+                    // Make the move
+                    board[k] = HUMANMOVE;
+
+                    // Call minimax recursively and choose
+                    // the minimum value
+                    best = min(best, minimax(board, depth+1, !isMax));
+
+                    // Undo the move
+                    board[k] = '_';
+                }
+
+        }
+        return best;
+    }
+
+
+}
+
+// This will return the best possible move for the player
+int findBestMove(char board[9]) {
+    int bestVal = -1000;
+
+    int bestMove = -1;
+
+
+    // Traverse all cells, evalutae minimax function for
+    // all empty cells. And return the cell with optimal
+    // value.
+    for (int i = 0; i < 9; i++) {
+        // Check if cell is empty
+        if (board[i] == '_') {
+            // Make the move
+            board[i] = COMPUTERMOVE;
+
+            // compute evaluation function for this move.
+            int moveVal = minimax(board, 0, false);
+
+            // Undo the move
+            board[i] = '_';
+
+            // If the value of the current move is
+            // more than the best value, then update
+            // best/
+            if (moveVal > bestVal) {
+                bestMove = i; //aktuelle Array Position
+                bestVal = moveVal;
+            }
+        }
+
+    }
+
+    printf("The value of the best Move is : %d", bestMove);
+
+    return bestMove;
+
 }
 
 // Funktion zum spielen von Tic-Tac-Toe
-void playTicTacToe(int nextTurn)
-{
+void playTicTacToe(int nextTurn) {
     // Ein simples Tic-Tac-Toe Feld zum spielen von 0 bis 8
     char board[9];
 
@@ -137,18 +253,26 @@ void playTicTacToe(int nextTurn)
     // Zeigt die Anleitung bevor das Spiel beginnt
     showInstructions();
 
-    int moveIndex = 0, x, y;
+    if (nextTurn == COMPUTER){
+        board[0]= COMPUTERMOVE;
+        nextTurn = HUMAN;
+        showBoard(board);
+        moves++;
+    }
+
     int zahleingabe = 0;
 
     // Spiele bis jemand gewonnen oder das Spiel unentschieden ausgeht
-    while (gameOver(board) == false && moves != 9) {
+    while (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE))  && moves != 9) {
 
         if (nextTurn == COMPUTER) {
             bool gueltig;
+            int zahl;
             do {
-
-                int zahl = rand() % (8 + 1 - 0) + 0;
-                if(board[zahl] == ' ') {
+                // simple erste Implementierung mit Zufallszahl
+                //int zahl = rand() % (8 + 1 - 0) + 0;
+                zahl = findBestMove(board);
+                if(board[zahl] == '_') {
                     board[zahl] = COMPUTERMOVE;
                     gueltig = true;
                 }else{
@@ -156,12 +280,13 @@ void playTicTacToe(int nextTurn)
                 }
 
             }while(!gueltig);
-                printf("COMPUTER has put a %c in cell %d\n",
-                       COMPUTERMOVE, moves++ );
-                showBoard(board);
-                lastTurn = COMPUTER;
-                nextTurn = HUMAN;
-            }
+            printf("COMPUTER has put a %c in cell %d\n",
+                   COMPUTERMOVE, zahl );
+            moves++;
+            showBoard(board);
+            lastTurn = COMPUTER;
+            nextTurn = HUMAN;
+        }
 
         else if (nextTurn == HUMAN)
         {
@@ -171,7 +296,7 @@ void playTicTacToe(int nextTurn)
                 printf("Bitte gib dein Zug ein.");
                 cin >> zahleingabe;
 
-                if (board[zahleingabe] == ' ') {
+                if (board[zahleingabe] == '_') {
                     board[zahleingabe] = HUMANMOVE;
                     gueltig = true;
                 } else {
@@ -180,8 +305,8 @@ void playTicTacToe(int nextTurn)
                 }
             }while(!gueltig);
 
-            printf ("HUMAN has put a %c in cell %d\n",
-                    HUMANMOVE, moves++);
+            printf ("HUMAN has put a %c in cell %d\n", HUMANMOVE, zahleingabe);
+            moves++;
             showBoard(board);
             lastTurn = HUMAN;
             nextTurn = COMPUTER;
@@ -189,7 +314,7 @@ void playTicTacToe(int nextTurn)
     }
 
     // Wenn das Spiel unentschieden ausgeht
-    if (gameOver(board) == false && moves == 9)
+    if (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE)) && moves == 9)
         printf("It's a draw\n");
     else
     {   // Den Gewinner ernennen
@@ -208,11 +333,13 @@ void playTicTacToe(int nextTurn)
     return;
 }
 
+
 // Hier gehts los
 int main()
 {
-    // Lass und das Spiel mit dem Computer als Beginner beginnen
-    playTicTacToe(COMPUTER);
+    // Lass das Spiel mit dem Computer
+    // beginnen
+    playTicTacToe(HUMAN);
 
     return (0);
 }
