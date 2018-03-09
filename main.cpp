@@ -140,13 +140,13 @@ bool isMovesLeft(char board[])
 // the value of the board
 int minimax(char board[9], int depth, bool isMax) {
     if (winning(board, HUMANMOVE)){
-        printf("minmax %d  , ",-10);
-        return -10;
+        printf("minmax %d  , ",depth -10);
+        return depth -10;
     }
     else if (winning(board, COMPUTERMOVE)){
 
-        printf("minmax %d , ",10);
-        return 10;
+        printf("minmax %d , ",10 - depth);
+        return 10 - depth;
     }
     else if (!isMovesLeft(board)){
         printf("minmax %d , ",0);
