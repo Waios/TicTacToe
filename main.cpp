@@ -140,12 +140,16 @@ bool isMovesLeft(char board[])
 // the value of the board
 int minimax(char board[9], int depth, bool isMax) {
     if (winning(board, HUMANMOVE)){
+        printf("minmax %d  , ",-10);
         return -10;
     }
     else if (winning(board, COMPUTERMOVE)){
+
+        printf("minmax %d , ",10);
         return 10;
     }
     else if (!isMovesLeft(board)){
+        printf("minmax %d , ",0);
         return 0;
     }
 
@@ -159,7 +163,7 @@ int minimax(char board[9], int depth, bool isMax) {
                 if (board[i]=='_') {
                     // Make the move
                     board[i] = COMPUTERMOVE;
-
+                    //showBoard(board);
                     // Call minimax recursively and choose
                     // the maximum value
                     best = max( best, minimax(board, depth+1, !isMax) );
@@ -185,7 +189,7 @@ int minimax(char board[9], int depth, bool isMax) {
                 {
                     // Make the move
                     board[k] = HUMANMOVE;
-
+                    //showBoard(board);
                     // Call minimax recursively and choose
                     // the minimum value
                     best = min(best, minimax(board, depth+1, !isMax));
@@ -216,20 +220,26 @@ int findBestMove(char board[9]) {
         if (board[i] == '_') {
             // Make the move
             board[i] = COMPUTERMOVE;
-
+            showBoard(board);
             // compute evaluation function for this move.
             int moveVal = minimax(board, 0, false);
+            printf("\n ++++ move Val= %d \n",moveVal);
 
-            // Undo the move
-            board[i] = '_';
+
 
             // If the value of the current move is
             // more than the best value, then update
             // best/
             if (moveVal > bestVal) {
+                showBoard(board);
                 bestMove = i; //aktuelle Array Position
                 bestVal = moveVal;
+                printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+                printf("+++++++++++++++best var = %d, best move %d \n",moveVal, bestMove);
+                printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
             }
+            // Undo the move
+            board[i] = '_';
         }
 
     }
