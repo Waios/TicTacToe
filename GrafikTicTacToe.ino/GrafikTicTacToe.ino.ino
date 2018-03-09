@@ -60,7 +60,7 @@ bool HUMAN_TURN = false;
 #define HUMANMOVE 'X'
 
 
-// 2 dimensionles integer Array fuer alle möglichen Positionen der Dreiecke
+/* 2 dimensionles integer Array fuer alle möglichen Positionen der Dreiecke
 int triangle[9][6]{
         {220, 80, 170, 50, 170, 110},
         {220, 160, 170, 130, 170, 190},
@@ -72,6 +72,7 @@ int triangle[9][6]{
         {70, 160, 20, 130, 20, 190},
         {70, 240, 20, 210, 20, 270}
 };
+ */
 
 // 2 dimensionles integer Array fuer alle möglichen Positionen der Kreise
 int circle [9][2]{
@@ -138,6 +139,7 @@ void setup(void) {
 
     prepareField();
 
+
     pinMode(13, OUTPUT);  //technisch bedingt 
 }
 
@@ -156,51 +158,176 @@ void crossAt(int pos){
 
 }
 
-void triangleAt(int pos){
-    tft.drawTriangle(triangle[pos][0], triangle[pos][1], triangle[pos][2], triangle[pos][3], triangle[pos][4], triangle[pos][5], BLUE);
+bool isMovesLeft(char board[])
+{
+    for (int i = 0; i<9; i++){
+        if (board[i]=='_'){
+            return true;
+        }
+    }
+    return false;
 }
 
+/*void triangleAt(int pos){
+    tft.drawTriangle(triangle[pos][0], triangle[pos][1], triangle[pos][2], triangle[pos][3], triangle[pos][4], triangle[pos][5], BLUE);
+}
+*/
 
 void prepareField() {
 
     // Für den Anfang auf dem Board alle Felder mit Leerstring initialisieren
     for (int i=0; i<9; i++) {
-        board[i] = ' ';
+        board[i] = '_';
     }
     // Spielfeld aufbauen
     tft.drawLine(20, col1, 220, col1, WHITE);
     tft.drawLine(20, col2, 220, col2, WHITE);
     tft.drawLine(row1, 40, row1, 280, WHITE);
     tft.drawLine(row2, 40, row2, 280, WHITE);
+
+   
+}
+
+bool isFieldEmpty(){
+  for(int i = 0; i < 9; i++){
+    if(board[i] != '_')  return false;
+  }
+  return true;
+  
+}
+
+// This is the minimax function. It considers all
+// the possible ways the game can go and returns
+// the value of the board
+int minimax(char board[9], int depth, bool isMax) {
+    if (winning(board, HUMANMOVE)){
+        return -10;
+    }
+    else if (winning(board, COMPUTERMOVE)){
+        return 10;
+    }
+    else if (!isMovesLeft(board)){
+        return 0;
+    }
+
+    // If this maximizer's move
+    if (isMax) {
+        int best = -1000;
+
+        // Traverse all cells
+        for (int i = 0; i<9; i++) {
+            // Check if cell is empty
+            if (board[i]=='_') {
+                // Make the move
+                board[i] = COMPUTERMOVE;
+
+                // Call minimax recursively and choose
+                // the maximum value
+                best = max( best, minimax(board, depth+1, !isMax) );
+
+                // Undo the move
+                board[i] = '_';
+            }
+
+        }
+        return best;
+    }
+        // If this minimizer's move
+    else
+    {
+        int best = 1000;
+
+        // Traverse all cells
+        for (int k = 0; k<9; k++)
+        {
+
+            // Check if cell is empty
+            if (board[k]=='_')
+            {
+                // Make the move
+                board[k] = HUMANMOVE;
+
+                // Call minimax recursively and choose
+                // the minimum value
+                best = min(best, minimax(board, depth+1, !isMax));
+
+                // Undo the move
+                board[k] = '_';
+            }
+
+        }
+        return best;
+    }
+
+
+}
+
+// This will return the best possible move for the player
+int findBestMove(char board[9]) {
+    int bestVal = -1000;
+
+    int bestMove = -1;
+
+
+    if(isFieldEmpty()){
+      return 0;
+  
+    }
+    // Traverse all cells, evalutae minimax function for
+    // all empty cells. And return the cell with optimal
+    // value.
+    for (int i = 0; i < 9; i++) {
+        // Check if cell is empty
+        if (board[i] == '_') {
+            // Make the move
+            board[i] = COMPUTERMOVE;
+
+            // compute evaluation function for this move.
+            int moveVal = minimax(board, 0, false);
+
+            // Undo the move
+            board[i] = '_';
+
+            // If the value of the current move is
+            // more than the best value, then update
+            // best/
+            if (moveVal > bestVal) {
+                bestMove = i; //aktuelle Array Position
+                bestVal = moveVal;
+            }
+        }
+
+    }
+
+    return bestMove;
+
 }
 
 
-
-// Prüfen ob eine Linie mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool rowCrossed(char board[]) {
+bool rowCrossed(char board[],char player) {
 
 
-    if (board[0] == board[1] && board[1] == board[2] && board[2] != ' ')
+    if (board[0] == player && board[0] == board[1] && board[1] == board[2])
         return(true);
-    if (board[3] == board[4] && board[4] == board[5] && board[5] != ' ')
+    if (board[3] == player && board[3] == board[4] && board[4] == board[5])
         return(true);
-    if (board[6] == board[7] && board[7] == board[8] && board[8] != ' ')
+    if (board[6] == player && board[6] == board[7] && board[7] == board[8])
         return (true);
 
     return(false);
 }
 
 // Prüfen ob eine Spalte mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool columnCrossed(char board[]) {
+bool columnCrossed(char board[],char player) {
 
 
-    if (board[0] == board[3] && board[3] == board[6] && board[6] != ' ') {
+    if (board[0] == player && board[0] == board[3] && board[3] == board[6]) {
         return(true);
     }
-    if (board[1] == board[4] && board[4] == board[7] && board[7] != ' ') {
+    if (board[1] == player && board[1] == board[4] && board[4] == board[7]) {
         return(true);
     }
-    if (board[2] == board[5] && board[5] == board[8] && board[8] != ' ') {
+    if (board[2] == player && board[2] == board[5] && board[5] == board[8]) {
         return (true);
     }
 
@@ -208,24 +335,24 @@ bool columnCrossed(char board[]) {
 }
 
 // Prüfen ob eine Diagonale mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool diagonalCrossed(char board[])
+bool diagonalCrossed(char board[],char player)
 {
-    if (board[0] == board[4] && board[4] == board[8] && board[8] != ' ') {
+    if (board[0] == player && board[0] == board[4] && board[4] == board[8]) {
         return (true);
     }
 
-    if (board[2] == board[4] && board[4] == board[6] && board[6] != ' ') {
+    if (board[2] == player && board[2] == board[4] && board[4] == board[6]) {
         return (true);
     }
 
     return(false);
 }
 
-// Die Funktion gibt 'true' zurück falls eine der drei aufgerufenen Prüfungen erflogreich ist ansonsten 'false'
-bool gameOver(char board[])
-{
+// Die Funktion gibt true zurück fals eine der drei aufgerufenen Prüfungen erflogreich ist ansonsten false
 
-    return(rowCrossed(board) || columnCrossed(board) || diagonalCrossed(board) );
+bool winning(char board[], char player)
+{
+    return(rowCrossed(board,player) || columnCrossed(board,player) || diagonalCrossed(board,player) );
 }
 
 #define MINPRESSURE 10
@@ -234,13 +361,13 @@ bool gameOver(char board[])
 void loop() {
 
     // Spiele bis jemand gewonnen oder das Spiel unentschieden ausgeht
-    while (!gameOver(board) && moves != 9) {
+    while (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE))  && moves != 9) {
 
         if ( COMPUTER_TURN ) {
 
             do {// hier muss eine bessere Strategie implementiert werden!
-                zahl =(int)random(0, 9);
-                if(board[zahl] == ' ') {
+                zahl = findBestMove(board);
+                if(board[zahl] == '_') {
                     board[zahl] = COMPUTERMOVE;
                     gueltig = true;
                 }else{
@@ -287,7 +414,7 @@ void loop() {
                     {zahl =2;
                     }
 
-                    if (board[zahl] == ' ') {
+                    if (board[zahl] == '_') {
                         board[zahl] = HUMANMOVE;
                         gueltig = true;
                     } else {
@@ -304,7 +431,7 @@ void loop() {
     }
 
     // Wenn das Spiel unentschieden ausgeht
-    if (! gameOver(board) && moves == 9){
+    if (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE)) && moves == 9){
         tft.setRotation(tft.getRotation()+1);
         tft.setCursor(0, 2);
         tft.setTextColor(RED);

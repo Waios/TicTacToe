@@ -59,7 +59,7 @@ bool HUMAN_TURN = false;
 #define HUMANMOVE 'X'
 
 
-// 2 dimensionles integer Array fuer alle möglichen Positionen der Dreiecke
+/* 2 dimensionles integer Array fuer alle möglichen Positionen der Dreiecke
 int triangle[9][6]{
         {220, 80, 170, 50, 170, 110},
         {220, 160, 170, 130, 170, 190},
@@ -71,6 +71,7 @@ int triangle[9][6]{
         {70, 160, 20, 130, 20, 190},
         {70, 240, 20, 210, 20, 270}
 };
+ */
 
 // 2 dimensionles integer Array fuer alle möglichen Positionen der Kreise
 int circle [9][3]{
@@ -170,30 +171,30 @@ void prepareField() {
 
 
 // Prüfen ob eine Linie mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool rowCrossed(char board[]) {
+bool rowCrossed(char board[],char player) {
 
 
-    if (board[0] == board[1] && board[1] == board[2] && board[2] != ' ')
+    if (board[0] == player && board[0] == board[1] && board[1] == board[2])
         return(true);
-    if (board[3] == board[4] && board[4] == board[5] && board[5] != ' ')
+    if (board[3] == player && board[3] == board[4] && board[4] == board[5])
         return(true);
-    if (board[6] == board[7] && board[7] == board[8] && board[8] != ' ')
+    if (board[6] == player && board[6] == board[7] && board[7] == board[8])
         return (true);
 
     return(false);
 }
 
 // Prüfen ob eine Spalte mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool columnCrossed(char board[]) {
+bool columnCrossed(char board[],char player) {
 
 
-    if (board[0] == board[3] && board[3] == board[6] && board[6] != ' ') {
+    if (board[0] == player && board[0] == board[3] && board[3] == board[6]) {
         return(true);
     }
-    if (board[1] == board[4] && board[4] == board[7] && board[7] != ' ') {
+    if (board[1] == player && board[1] == board[4] && board[4] == board[7]) {
         return(true);
     }
-    if (board[2] == board[5] && board[5] == board[8] && board[8] != ' ') {
+    if (board[2] == player && board[2] == board[5] && board[5] == board[8]) {
         return (true);
     }
 
@@ -201,24 +202,24 @@ bool columnCrossed(char board[]) {
 }
 
 // Prüfen ob eine Diagonale mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool diagonalCrossed(char board[])
+bool diagonalCrossed(char board[],char player)
 {
-    if (board[0] == board[4] && board[4] == board[8] && board[8] != ' ') {
+    if (board[0] == player && board[0] == board[4] && board[4] == board[8]) {
         return (true);
     }
 
-    if (board[2] == board[4] && board[4] == board[6] && board[6] != ' ') {
+    if (board[2] == player && board[2] == board[4] && board[4] == board[6]) {
         return (true);
     }
 
     return(false);
 }
 
-// Die Funktion gibt 'true' zurück falls eine der drei aufgerufenen Prüfungen erflogreich ist ansonsten 'false'
-bool gameOver(char board[])
-{
+// Die Funktion gibt true zurück fals eine der drei aufgerufenen Prüfungen erflogreich ist ansonsten false
 
-    return(rowCrossed(board) || columnCrossed(board) || diagonalCrossed(board) );
+bool winning(char board[], char player)
+{
+    return(rowCrossed(board,player) || columnCrossed(board,player) || diagonalCrossed(board,player) );
 }
 
 #define MINPRESSURE 10
@@ -227,12 +228,13 @@ bool gameOver(char board[])
 void loop() {
 
     // Spiele bis jemand gewonnen oder das Spiel unentschieden ausgeht
-    while (!gameOver(board) && moves != 9) {
+    while (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE))  && moves != 9) {
 
         if ( COMPUTER_TURN ) {
-
+            bool gueltig;
+            int zahl;
             do {
-                zahl =(int)random(0, 9);
+                zahl = findBestMove(board);
                 if(board[zahl] == ' ') {
                     board[zahl] = COMPUTERMOVE;
                     gueltig = true;

@@ -76,11 +76,11 @@ void declareWinner(int whoseTurn)
 bool rowCrossed(char board[],char player) {
 
 
-        if (board[0] == board[1] && board[1] == board[2] && board[2] == player)
+        if (board[0] == player && board[0] == board[1] && board[1] == board[2])
             return(true);
-        if (board[3] == board[4] && board[4] == board[5] && board[5] == player)
+        if (board[3] == player && board[3] == board[4] && board[4] == board[5])
             return(true);
-        if (board[6] == board[7] && board[7] == board[8] && board[8] == player)
+        if (board[6] == player && board[6] == board[7] && board[7] == board[8])
             return (true);
 
     return(false);
@@ -90,13 +90,13 @@ bool rowCrossed(char board[],char player) {
 bool columnCrossed(char board[],char player) {
 
 
-        if (board[0] == board[3] && board[3] == board[6] && board[6] == player) {
+        if (board[0] == player && board[0] == board[3] && board[3] == board[6]) {
             return(true);
         }
-        if (board[1] == board[4] && board[4] == board[7] && board[7] == player) {
+        if (board[1] == player && board[1] == board[4] && board[4] == board[7]) {
             return(true);
         }
-        if (board[2] == board[5] && board[5] == board[8] && board[8] == player) {
+        if (board[2] == player && board[2] == board[5] && board[5] == board[8]) {
             return (true);
         }
 
@@ -106,11 +106,11 @@ bool columnCrossed(char board[],char player) {
 // Prüfen ob eine Diagonale mit drei gleichen nicht leeren Zeichen ausgefüllt ist
 bool diagonalCrossed(char board[],char player)
 {
-    if (board[0] == board[4] && board[4] == board[8] && board[8] == player) {
+    if (board[0] == player && board[0] == board[4] && board[4] == board[8]) {
         return (true);
     }
 
-    if (board[2] == board[4] && board[4] == board[6] && board[6] == player) {
+    if (board[2] == player && board[2] == board[4] && board[4] == board[6]) {
         return (true);
     }
 
@@ -339,7 +339,7 @@ int main()
 {
     // Lass das Spiel mit dem Computer
     // beginnen
-    playTicTacToe(HUMAN);
+    playTicTacToe(COMPUTER);
 
     return (0);
 }
