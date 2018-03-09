@@ -140,13 +140,13 @@ bool isMovesLeft(char board[])
 // the value of the board
 int minimax(char board[9], int depth, bool isMax) {
     if (winning(board, HUMANMOVE)){
-        printf("minmax %d  , ",depth -10);
-        return depth -10;
+        printf("minmax %d  , ",-10);
+        return -10;
     }
     else if (winning(board, COMPUTERMOVE)){
 
-        printf("minmax %d , ",10 - depth);
-        return 10 - depth;
+        printf("minmax %d , ",10);
+        return 10;
     }
     else if (!isMovesLeft(board)){
         printf("minmax %d , ",0);
@@ -215,14 +215,15 @@ int findBestMove(char board[9]) {
     // Traverse all cells, evalutae minimax function for
     // all empty cells. And return the cell with optimal
     // value.
-    for (int i = 0; i < 9; i++) {
+
+    for (int i = 0; i < 9 && bestVal != 10; i++) {
         // Check if cell is empty
         if (board[i] == '_') {
             // Make the move
             board[i] = COMPUTERMOVE;
             showBoard(board);
             // compute evaluation function for this move.
-            int moveVal = minimax(board, 0, false);
+           int moveVal = minimax(board, 0, false);
             printf("\n ++++ move Val= %d \n",moveVal);
 
 
