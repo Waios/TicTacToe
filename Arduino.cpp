@@ -342,12 +342,23 @@ void loop() {
         if (COMPUTER_TURN) {
 
 
+            do {
+                feld = findBestMove(board);  //das ist die komplexe Lösung mit dem rekursiven Algorythmus
+                //feld =(int)random(0, 9); // das ist die simple Lösung mit dem Zufallsprinzip
+                if(board[feld] == '_') {
+                    board[feld] = COMPUTERMOVE;
+                    gueltig = true;
+                }else{
+                    gueltig = false;
+                }
+            }while(!gueltig);
+
+/*
             feld = findBestMove(board);
             board[feld] = COMPUTERMOVE;
-            circleAt(feld);
             gueltig = true;
-
-
+               */
+            circleAt(feld);
             COMPUTER_TURN = false;
             HUMAN_TURN = true;
 
@@ -435,4 +446,5 @@ void loop() {
     prepareField();
     moves = 0;
 }
+
 

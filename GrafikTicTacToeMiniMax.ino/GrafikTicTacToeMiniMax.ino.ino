@@ -243,7 +243,7 @@ int minimax(char board[9], int depth, bool isMax) {
 }
 
 // Finde die bestmögliche Platzierung für den nächsten Zug
-int findBestMove(char board[9]) {
+int findBestMove() {
     int bestVal = -1000;
 
     int bestMove = -1;
@@ -331,6 +331,19 @@ bool winning(char board[], char player) {
     return (rowCrossed(board, player) || columnCrossed(board, player) || diagonalCrossed(board, player));
 }
 
+int moveRandom(){
+    do {
+        feld =(int)random(0, 9); // das ist die simple Lösung mit dem Zufallsprinzip
+        if(board[feld] == '_') {
+            board[feld] = COMPUTERMOVE;
+            gueltig = true;
+        }else{
+            gueltig = false;
+        }
+    }while(!gueltig);
+    return feld;
+}
+
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
 
@@ -341,23 +354,12 @@ void loop() {
 
         if (COMPUTER_TURN) {
 
-          
-             do {
-              //feld = findBestMove(board);  //das ist die komplexe Lösung mit dem rekursiven Algorythmus
-               feld =(int)random(0, 9); // das ist die simple Lösung mit dem Zufallsprinzip
-                if(board[feld] == '_') {
-                    board[feld] = COMPUTERMOVE;
-                    gueltig = true;
-                }else{
-                    gueltig = false;
-                }
-            }while(!gueltig);
            
-/*         
-            feld = findBestMove(board); 
-            board[feld] = COMPUTERMOVE;         
-            gueltig = true;
-               */
+            feld = moveRandom();
+            //feld = findBestMove();
+            board[feld] = COMPUTERMOVE;
+            
+
             circleAt(feld);
             COMPUTER_TURN = false;
             HUMAN_TURN = true;
