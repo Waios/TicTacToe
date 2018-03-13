@@ -5,7 +5,7 @@
 
 #if defined(__SAM3X8E__)
 #undef __FlashStringHelper::F(string_literal)
-    #define F(string_literal) string_literal
+#define F(string_literal) string_literal
 #endif
 
 
@@ -39,12 +39,12 @@ Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 
 // Farben als lesbare Konstanten  16-bit color values
 
-#define	BLACK   0x0000
-#define	BLUE    0x001F
-#define	RED     0xF800
-#define	GREEN   0x07E0
-#define CYAN    0x07FF
-#define MAGENTA 0xF81F
+#define  BLACK   0x0000
+// #define BLUE    0x001F
+#define RED     0xF800
+#define GREEN   0x07E0
+// #define CYAN    0x07FF
+// #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
 
@@ -74,16 +74,29 @@ int triangle[9][6]{
  */
 
 // 2 dimensionles integer Array fuer alle möglichen Positionen der Kreise
-int circle [9][3]{
-        {195, 80, 25},
-        {195, 160, 25},
-        {195, 240, 25},
-        {120, 80, 25},
-        {120, 160, 25},
-        {120, 240, 25},
-        {40, 80, 25},
-        {40, 160, 25},
-        {40, 240, 25}
+int circle[9][2]{
+        {195, 80},
+        {195, 160},
+        {195, 240},
+        {120, 80},
+        {120, 160},
+        {120, 240},
+        {40,  80},
+        {40,  160},
+        {40,  240}
+};
+
+// 2 dimensionles integer Array fuer alle möglichen Positionen der Kreuze
+int cross[9][2]{
+        {195, 80},
+        {195, 160},
+        {195, 240},
+        {120, 80},
+        {120, 160},
+        {120, 240},
+        {40,  80},
+        {40,  160},
+        {40,  240}
 };
 
 // Variablen für Begrenzungslinien
@@ -94,116 +107,213 @@ int row2 = 162;
 
 // Ein simples Tic-Tac-Toe Feld zum spielen von 0 bis 8
 char board[9];
-int moveIndex = 0, x, y;
-int zahleingabe = 0;
+int feldeingabe = 0;
 int moves = 0;
-int zahl; // das gewaehlte Feld
+int feld = -1; // das gewaehlte Feld
 bool gueltig;
 
 void setup(void) {
-    Serial.begin(9600);
-    Serial.println(F("Paint!"));
 
     tft.reset();
 
     uint16_t identifier = tft.readID();
-    if(identifier == 0x9325) {
-        Serial.println(F("Found ILI9325 LCD driver"));
-    } else if(identifier == 0x9328) {
-        Serial.println(F("Found ILI9328 LCD driver"));
-    } else if(identifier == 0x4535) {
-        Serial.println(F("Found LGDP4535 LCD driver"));
-    }else if(identifier == 0x7575) {
-        Serial.println(F("Found HX8347G LCD driver"));
-    } else if(identifier == 0x9341) {
-        Serial.println(F("Found ILI9341 LCD driver"));
-    } else if(identifier == 0x8357) {
-        Serial.println(F("Found HX8357D LCD driver"));
-    } else if(identifier==0x0101)
-    {
-        identifier=0x9341;
+    if (identifier == 0x0101) {
+        identifier = 0x9341;
         Serial.println(F("Found 0x9341 LCD driver"));
-    }else {
+    } else {
         Serial.print(F("Unknown LCD driver chip: "));
-
-        identifier=0x9341;
-
+        identifier = 0x9341;
     }
 
-    // Den Zufallsgenerator inizialisieren damit er nicht immer die selben Zahlen generiert
-    randomSeed(analogRead(0));
-
-    tft.begin(identifier);
-    tft.setRotation(2);
+    tft.begin(identifier);//technisch bedingt
+    tft.setRotation(2);// Bildschirm orientierung
 
     tft.fillScreen(BLACK);
 
-
     prepareField();
 
-    pinMode(13, OUTPUT);
+
+    pinMode(13, OUTPUT);  //technisch bedingt 
 }
 
-void circleAt(int pos){
-    tft.drawCircle(circle[pos][0], circle[pos][1], circle[pos][2], YELLOW);
+void circleAt(int pos) {
+    tft.drawCircle(circle[pos][0], circle[pos][1], 25, YELLOW);
+}
+
+void crossAt(int pos) {
+    int x = cross[pos][0];
+    int y = cross[pos][1];
+    int z = 25;
+    tft.drawLine(x - z, y - z, x + z, y + z, GREEN);
+    tft.drawLine(x + z, y - z, x - z, y + z, GREEN);
+
 
 }
 
-void triangleAt(int pos){
+// Prüfe auf mindestens ein freies Feld
+bool isMovesLeft() {
+    for (int i = 0; i < 9; i++) {
+        if (board[i] == '_') return true;
+    }
+    return false;
+}
+
+/*void triangleAt(int pos){
     tft.drawTriangle(triangle[pos][0], triangle[pos][1], triangle[pos][2], triangle[pos][3], triangle[pos][4], triangle[pos][5], BLUE);
 }
-
+*/
 
 void prepareField() {
 
     // Für den Anfang auf dem Board alle Felder mit Leerstring initialisieren
-    for (int i=0; i<9; i++) {
-        board[i] = ' ';
+    for (int i = 0; i < 9; i++) {
+        board[i] = '_';
     }
-
     // Spielfeld aufbauen
     tft.drawLine(20, col1, 220, col1, WHITE);
     tft.drawLine(20, col2, 220, col2, WHITE);
     tft.drawLine(row1, 40, row1, 280, WHITE);
     tft.drawLine(row2, 40, row2, 280, WHITE);
+
+
 }
 
+// Prüfe ob das komplette Feld leer ist
+bool isFieldEmpty() {
+    for (int i = 0; i < 9; i++) {
+        if (board[i] != '_') return false;
+    }
+    return true;
+
+}
+
+// Das ist die Minimax Funktion sie ermittelt alle Möglichkeiten für die noch freien Felder auf dem Board
+// und liefert einen entsprechenden Wert zurück
+int minimax(char board[9], int depth, bool isMax) {
+    if (winning(board, HUMANMOVE)) {
+        return -10;
+    } else if (winning(board, COMPUTERMOVE)) {
+        return 10;
+    } else if (!isMovesLeft()) {
+        return 0;
+    }
+
+    // Wenn der Computer das nächste Feld belegt(das ist der Maximizer)
+    if (isMax) {
+        int best = -1000;
+
+        // Über alle Felder iterieren
+        for (int i = 0; i < 9; i++) {
+            // Wenn das Feld leer ist
+            if (board[i] == '_') {
+                // Das Feld belegen
+                board[i] = COMPUTERMOVE;
+
+                // Jetzt wird die minimax Funktion rekursiv aufgerufen
+                // und durch die Funktion max der größere Wert zurückgeliefert
+                best = max(best, minimax(board, depth + 1, !isMax));
+
+                // Feld wieder löschen
+                board[i] = '_';
+            }
+
+        }
+        return best;
+    }
+        // Wenn der Spieler das nächste Feld belegt(das ist der Minimizer)
+    else {
+        int best = 1000;
+
+        for (int k = 0; k < 9; k++) {
+            if (board[k] == '_') {
+                board[k] = HUMANMOVE;
+
+                // Jetzt wird die minimax Funktion rekursiv aufgerufen
+                // und durch die Funktion min der kleinere Wert zurückgeliefert
+                best = min(best, minimax(board, depth + 1, !isMax));
+
+                board[k] = '_';
+            }
+
+        }
+        return best;
+    }
 
 
-// Prüfen ob eine Linie mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool rowCrossed(char board[],char player) {
+}
+
+// Finde die bestmögliche Platzierung für den nächsten Zug
+int findBestMove(char board[9]) {
+    int bestVal = -1000;
+
+    int bestMove = -1;
+
+// Wenn das Feld noch komplett leer ist setzt der Computer immer sein Kreis in das obere linke Feld
+    if (isFieldEmpty()) {
+        return 0;
+    }
+    // Alle Felder untersuchen und den mittels minimax Funktion bestimmten Wert zurückliefern
+    // es wird der größte gefundene Wert zurückgeliefert
+    // wird auch schon beendet wenn eine 10 brechnet wurde
+    for (int i = 0; i < 9 && bestVal != 10; i++) {
+        // Wenn das Feld leer ist
+        if (board[i] == '_') {
+            // Das Feld belegen
+            board[i] = COMPUTERMOVE;
+
+            // FÜr dieses Feld den Wert ermitteln.
+            int moveVal = minimax(board, 0, false);
+
+            // Feld wieder leeren
+            board[i] = '_';
+
+            // Wenn der neue Wert größer ist als der bisherige beste Wert
+            // den neuen Wert speichern und das aktuelle Feld merken
+            if (moveVal > bestVal) {
+                bestMove = i; //aktuelle Array Position
+                bestVal = moveVal;
+            }
+        }
+
+    }
+
+    return bestMove;
+
+}
+
+// Prüfen ob eine Reihe mit drei gleichen Zeichen des Spielers ausgefüllt ist
+bool rowCrossed(char board[], char player) {
 
 
     if (board[0] == player && board[0] == board[1] && board[1] == board[2])
-        return(true);
+        return (true);
     if (board[3] == player && board[3] == board[4] && board[4] == board[5])
-        return(true);
+        return (true);
     if (board[6] == player && board[6] == board[7] && board[7] == board[8])
         return (true);
 
-    return(false);
+    return (false);
 }
 
-// Prüfen ob eine Spalte mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool columnCrossed(char board[],char player) {
+// Prüfen ob eine Spalte mit drei gleichen Zeichen des Spielers ausgefüllt ist
+bool columnCrossed(char board[], char player) {
 
 
     if (board[0] == player && board[0] == board[3] && board[3] == board[6]) {
-        return(true);
+        return (true);
     }
     if (board[1] == player && board[1] == board[4] && board[4] == board[7]) {
-        return(true);
+        return (true);
     }
     if (board[2] == player && board[2] == board[5] && board[5] == board[8]) {
         return (true);
     }
 
-    return(false);
+    return (false);
 }
 
-// Prüfen ob eine Diagonale mit drei gleichen nicht leeren Zeichen ausgefüllt ist
-bool diagonalCrossed(char board[],char player)
-{
+// Prüfen ob eine Diagonale mit drei gleichen Zeichen des Spielers ausgefüllt ist
+bool diagonalCrossed(char board[], char player) {
     if (board[0] == player && board[0] == board[4] && board[4] == board[8]) {
         return (true);
     }
@@ -212,14 +322,13 @@ bool diagonalCrossed(char board[],char player)
         return (true);
     }
 
-    return(false);
+    return (false);
 }
 
-// Die Funktion gibt true zurück fals eine der drei aufgerufenen Prüfungen erflogreich ist ansonsten false
+// Die Funktion gibt true zurück falls eine der drei aufgerufenen Prüfungen erflogreich ist ansonsten false
 
-bool winning(char board[], char player)
-{
-    return(rowCrossed(board,player) || columnCrossed(board,player) || diagonalCrossed(board,player) );
+bool winning(char board[], char player) {
+    return (rowCrossed(board, player) || columnCrossed(board, player) || diagonalCrossed(board, player));
 }
 
 #define MINPRESSURE 10
@@ -228,102 +337,99 @@ bool winning(char board[], char player)
 void loop() {
 
     // Spiele bis jemand gewonnen oder das Spiel unentschieden ausgeht
-    while (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE))  && moves != 9) {
+    while (!(winning(board, COMPUTERMOVE) || winning(board, HUMANMOVE)) && moves != 9) {
 
-        if ( COMPUTER_TURN ) {
-            bool gueltig;
-            int zahl;
-            do {
-                zahl = findBestMove(board);
-                if(board[zahl] == ' ') {
-                    board[zahl] = COMPUTERMOVE;
-                    gueltig = true;
-                }else{
-                    gueltig = false;
-                }
-            }while(!gueltig);
-            moves++ ;
-            circleAt(zahl);
+        if (COMPUTER_TURN) {
+
+
+            feld = findBestMove(board);
+            board[feld] = COMPUTERMOVE;
+            circleAt(feld);
+            gueltig = true;
+
+
             COMPUTER_TURN = false;
             HUMAN_TURN = true;
-        } else if ( HUMAN_TURN){
+
+        } else if (HUMAN_TURN) {
             gueltig = false;
             do {
-                digitalWrite(13, HIGH);
-                TSPoint p = ts.getPoint();
+                digitalWrite(13, HIGH); // Display spezifisch
+                TSPoint p = ts.getPoint(); // Touchscreen getPoint
                 digitalWrite(13, LOW);
                 // if sharing pins, you'll need to fix the directions of the touchscreen pins
                 pinMode(XM, OUTPUT);
                 pinMode(YP, OUTPUT);
 
-                if  ( p.z > MINPRESSURE &&  p.z < MAXPRESSURE) {
+                // Falls auf das Display gedrückt wurde
+                // die Position des Druckpunktes bestimmen
+                if (p.z > MINPRESSURE && p.z < MAXPRESSURE) {
 
                     // scale from 0->1023 to tft.width
                     p.x = map(p.x, TS_MINX, TS_MAXX, tft.width(), 0);
-                    p.y = (tft.height()-map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
-
-                    if(p.x < row1 && p.y < col1){
-                        zahl = 6;
-                    }else if(p.x < row2 && p.y < col1){
-                        zahl =3;
-                    }else if(p.y < col1){
-                        zahl =0;
-                    }else if(p.x < row1 && p.y < col2){
-                        zahl =7;
-                    }else if(p.x < row2 && p.y < col2){
-                        zahl =4;
-                    }else if(p.y < col2){
-                        zahl =1;
-                    }else if(p.x < row1){
-                        zahl =8;
-                    }else if(p.x < row2){
-                        zahl =5;
-                    }else
-                    {zahl =2;
+                    p.y = (tft.height() - map(p.y, TS_MINY, TS_MAXY, tft.height(), 0));
+                    // Ermittlung des Punktes anhand der Feldgrenzen
+                    if (p.x < row1 && p.y < col1) {
+                        feld = 6;
+                    } else if (p.x < row2 && p.y < col1) {
+                        feld = 3;
+                    } else if (p.y < col1) {
+                        feld = 0;
+                    } else if (p.x < row1 && p.y < col2) {
+                        feld = 7;
+                    } else if (p.x < row2 && p.y < col2) {
+                        feld = 4;
+                    } else if (p.y < col2) {
+                        feld = 1;
+                    } else if (p.x < row1) {
+                        feld = 8;
+                    } else if (p.x < row2) {
+                        feld = 5;
+                    } else {
+                        feld = 2;
                     }
-
-                    if (board[zahl] == ' ') {
-                        board[zahl] = HUMANMOVE;
+                    // Falls das Feld wirklich leer ist auf das gedrückt wurde
+                    if (board[feld] == '_') {
+                        board[feld] = HUMANMOVE; // Feld belegen
+                        crossAt(feld);
                         gueltig = true;
                     } else {
                         gueltig = false;
                     }
                 }
-            }while(!gueltig);
+            } while (!gueltig);
 
-            moves++;
-            triangleAt(zahl);
             HUMAN_TURN = false;
             COMPUTER_TURN = true;
         }
+        moves++;// nach jedem Zug um eins erhöhen
     }
 
-    // Wenn das Spiel unentschieden ausgeht
-    if (! gameOver(board) && moves == 9){
-        tft.setRotation(tft.getRotation()+1);
-        tft.setCursor(0, 30);
+    // Wenn das Spiel unentschieden ausgeht wird eine Meldung ausgegeben
+    if (!(winning(board, COMPUTERMOVE) || winning(board, HUMANMOVE)) && moves == 9) {
+        tft.setRotation(tft.getRotation() + 1);
+        tft.setCursor(0, 2);
         tft.setTextColor(RED);
         tft.setTextSize(2);
         tft.println("It's a draw");
-    }else
-    {   // Den Gewinner ernennen
-        tft.setRotation(tft.getRotation()+1);
-        tft.setCursor(0, 30);
+    } else {   // Den Gewinner ernennen
+        tft.setRotation(tft.getRotation() + 1);
+        tft.setCursor(0, 2);
         tft.setTextColor(RED);
         tft.setTextSize(2);
-        if (COMPUTER_TURN ) {
-            tft.println("You win!");
-            tft.println("Glueckwunsch!");
-        }
-        else if (HUMAN_TURN) {
+        if (COMPUTER_TURN) { //in diesem Fall hat der Mensch den letzten Zug gemacht
+            tft.print("You win! Gl");
+            tft.print(char(0x81));
+            tft.println("ckwunsch!");
+        } else if (HUMAN_TURN) { // in diesem Fall hat der Computer den letzten Zug gemacht
             tft.println("Computer wins!");
-        }else {
+        } else {
             tft.println("FATAL ERROR!");
         }
 
     }
-    delay(5000); // wait 5 seconds
-    //restart
+    delay(5000); //5 Sekunden Pause
+    // Spielfeld aufräumen
     tft.setRotation(2);
     tft.fillScreen(BLACK);
     prepareField();
