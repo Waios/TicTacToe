@@ -54,6 +54,7 @@ Elegoo_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 
 bool COMPUTER_TURN = true;
 bool HUMAN_TURN = false;
+bool COMPUTER_WINNER = false;
 
 #define COMPUTERMOVE 'O'
 #define HUMANMOVE 'X'
@@ -354,9 +355,13 @@ void loop() {
 
         if (COMPUTER_TURN) {
 
-           
+           if(COMPUTER_WINNER) {
             feld = moveRandom();
-            //feld = findBestMove();
+           }else {
+            feld = findBestMove();
+           }
+            
+            
             board[feld] = COMPUTERMOVE;
             
 
@@ -431,10 +436,12 @@ void loop() {
         tft.setTextColor(RED);
         tft.setTextSize(2);
         if (COMPUTER_TURN) { //in diesem Fall hat der Mensch den letzten Zug gemacht
+          COMPUTER_WINNER = false;
             tft.print("You win! Gl");
             tft.print(char(0x81));
             tft.println("ckwunsch!");
         } else if (HUMAN_TURN) { // in diesem Fall hat der Computer den letzten Zug gemacht
+          COMPUTER_WINNER = true;
             tft.println("Computer wins!");
         } else {
             tft.println("FATAL ERROR!");
