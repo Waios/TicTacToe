@@ -12,6 +12,9 @@ using namespace std;
 
 int nextTurn;
 int lastTurn;
+bool computerwin = false;
+int draw = 0;
+
 
 // Zeigt alle Felder an und wie sie belegt sind
 void showBoard(char board[])
@@ -47,6 +50,20 @@ void showInstructions()
     return;
 }
 
+int moveRandom(char board[]) {
+   bool gueltig = false;
+   int zahl;
+    do {
+        zahl = rand() % (8 + 1 - 0) + 0;
+        if (board[zahl] == '_') {
+            gueltig = true;
+        } else {
+            gueltig = false;
+        }
+    }while (!gueltig);
+    return zahl;
+}
+
 
 // Hier wird das Spieldfeld inizialisiert
 void initialise(char board[])
@@ -65,11 +82,15 @@ void initialise(char board[])
 // Ausgabe des Gewinners
 void declareWinner(int whoseTurn)
 {
-    if (whoseTurn == COMPUTER)
+    if (whoseTurn == COMPUTER) {
         printf("COMPUTER has won\n");
-    else
+        computerwin = true;
+    }
+    else {
         printf("HUMAN has won\n");
-    return;
+computerwin = false;
+    }
+        return;
 }
 
 // Prüfen ob eine Linie mit drei gleichen nicht leeren Zeichen ausgefüllt ist
@@ -122,6 +143,15 @@ bool diagonalCrossed(char board[],char player)
 bool winning(char board[], char player)
 {
     return(rowCrossed(board,player) || columnCrossed(board,player) || diagonalCrossed(board,player) );
+}
+
+bool shouldDoRandomMove(){
+    int randz = rand() % (10 + 1 - 0) + 0;
+    if (randz < draw){
+        return true;
+    }else {
+        return false;
+    }
 }
 
 
@@ -201,30 +231,27 @@ int minimax(char board[9], int depth, bool isMax) {
         }
         return best;
     }
-
-
 }
 
 // This will return the best possible move for the player
 int findBestMove(char board[9]) {
+
     int bestVal = -1000;
-
-    int bestMove = -1;
-
+    int bestMove =-1;
 
     // Traverse all cells, evalutae minimax function for
     // all empty cells. And return the cell with optimal
     // value.
 
-    for (int i = 0; i < 9 && bestVal != 10; i++) {
+    for (int i = 0; i < 9 && bestVal < 10; i++) {
         // Check if cell is empty
         if (board[i] == '_') {
             // Make the move
             board[i] = COMPUTERMOVE;
-            showBoard(board);
+           // showBoard(board);
             // compute evaluation function for this move.
            int moveVal = minimax(board, 0, false);
-            printf("\n ++++ move Val= %d \n",moveVal);
+           // printf("\n ++++ move Val= %d \n",moveVal);
 
 
 
@@ -232,12 +259,12 @@ int findBestMove(char board[9]) {
             // more than the best value, then update
             // best/
             if (moveVal > bestVal) {
-                showBoard(board);
                 bestMove = i; //aktuelle Array Position
                 bestVal = moveVal;
-                printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-                printf("+++++++++++++++best var = %d, best move %d \n",moveVal, bestMove);
-                printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+//                printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+//                printf("+++++++++++++++best var = %d, best move %d \n",moveVal, bestMove);
+//                printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+//                showBoard(board);
             }
             // Undo the move
             board[i] = '_';
@@ -279,18 +306,17 @@ void playTicTacToe(int nextTurn) {
         if (nextTurn == COMPUTER) {
             bool gueltig;
             int zahl;
-            do {
+
                 // simple erste Implementierung mit Zufallszahl
-                //int zahl = rand() % (8 + 1 - 0) + 0;
-                zahl = findBestMove(board);
-                if(board[zahl] == '_') {
-                    board[zahl] = COMPUTERMOVE;
-                    gueltig = true;
-                }else{
-                    gueltig = false;
+                if (computerwin || shouldDoRandomMove()){
+                    printf("moveRandom");
+                    zahl = moveRandom(board);
+                }else {
+                    printf("findBestMove");
+                    zahl = findBestMove(board);
                 }
 
-            }while(!gueltig);
+                 board[zahl] = COMPUTERMOVE;
             printf("COMPUTER has put a %c in cell %d\n",
                    COMPUTERMOVE, zahl );
             moves++;
@@ -325,11 +351,12 @@ void playTicTacToe(int nextTurn) {
     }
 
     // Wenn das Spiel unentschieden ausgeht
-    if (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE)) && moves == 9)
+    if (!(winning(board,COMPUTERMOVE)|| winning(board,HUMANMOVE)) && moves == 9) {
+        draw++;
         printf("It's a draw\n");
-    else
+    }else
     {   // Den Gewinner ernennen
-
+        draw = 0;
         if (lastTurn == COMPUTER) {
             declareWinner(COMPUTER);
         }
@@ -350,7 +377,10 @@ int main()
 {
     // Lass das Spiel mit dem Computer
     // beginnen
-    playTicTacToe(COMPUTER);
+    for(int x = 0; x < 5; x++){
+        playTicTacToe(COMPUTER);
+    }
+
 
     return (0);
 }
