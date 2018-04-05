@@ -5,14 +5,14 @@ using namespace std;
 #define COMPUTER 1
 #define HUMAN 2
 
-// Computer will move with 'O'
-// and human with 'X'
+// der Computer spielt mit 'O'
+// der Mensch spielt mit 'X'
 #define COMPUTERMOVE 'O'
 #define HUMANMOVE 'X'
 
 int nextTurn;
 int lastTurn;
-bool computerwin = false;
+bool computerWin = false;
 int draw = 0;
 
 
@@ -84,11 +84,11 @@ void declareWinner(int whoseTurn)
 {
     if (whoseTurn == COMPUTER) {
         printf("COMPUTER has won\n");
-        computerwin = true;
+        computerWin = true;
     }
     else {
         printf("HUMAN has won\n");
-computerwin = false;
+computerWin = false;
     }
         return;
 }
@@ -165,9 +165,10 @@ bool isMovesLeft(char board[])
     }
     return false;
 }
-// This is the minimax function. It considers all
-// the possible ways the game can go and returns
-// the value of the board
+// das ist die minimax funktion. es erwägt alle
+// möglichen wege das spiel zu gehen und gibt
+// den wert auf das board zurück
+
 int minimax(char board[9], int depth, bool isMax) {
     if (winning(board, HUMANMOVE)){
         printf("minmax %d  , ",-10);
@@ -183,48 +184,48 @@ int minimax(char board[9], int depth, bool isMax) {
         return 0;
     }
 
-    // If this maximizer's move
+    // das ist der maximizer zug
     if (isMax) {
         int best = -1000;
 
-        // Traverse all cells
+        // geht alle felder durch
         for (int i = 0; i<9; i++) {
-                // Check if cell is empty
+                // prüft ob ein feld frei ist
                 if (board[i]=='_') {
-                    // Make the move
+                    // macht den zug
                     board[i] = COMPUTERMOVE;
                     //showBoard(board);
-                    // Call minimax recursively and choose
-                    // the maximum value
+                    // ruft den minimax rekursiv auf und gibt
+                    // den größten wert zurück
                     best = max( best, minimax(board, depth+1, !isMax) );
 
-                    // Undo the move
+                    // macht den zug rückgängig
                     board[i] = '_';
                 }
 
         }
         return best;
     }
-        // If this minimizer's move
+        // das ist der minimizer zug
     else
     {
         int best = 1000;
 
-        // Traverse all cells
+        // geht alle felder durch
         for (int k = 0; k<9; k++)
         {
 
-                // Check if cell is empty
+                // prüft ob ein feld frei ist
                 if (board[k]=='_')
                 {
-                    // Make the move
+                    // macht den zug
                     board[k] = HUMANMOVE;
                     //showBoard(board);
-                    // Call minimax recursively and choose
-                    // the minimum value
+                    // ruft die minimax funktion rekursiv auf und gibt
+                    // den kleinsten wert zurück
                     best = min(best, minimax(board, depth+1, !isMax));
 
-                    // Undo the move
+                    // macht den zug rückgängig
                     board[k] = '_';
                 }
 
@@ -233,31 +234,29 @@ int minimax(char board[9], int depth, bool isMax) {
     }
 }
 
-// This will return the best possible move for the player
+// die funktion gibt den bestmöglichen zug für den computer zurück
 int findBestMove(char board[9]) {
 
     int bestVal = -1000;
     int bestMove =-1;
 
-    // Traverse all cells, evalutae minimax function for
-    // all empty cells. And return the cell with optimal
-    // value.
-
+    //geht alle Felder mit der minimax methode durch
+    //und gib den besten wert zurück also das beste feld
+    //wo der computer sein 'X' hinsetzt
     for (int i = 0; i < 9 && bestVal < 10; i++) {
-        // Check if cell is empty
+        // prüft ob ein ferld frei ist
         if (board[i] == '_') {
-            // Make the move
+            // macht den zug
             board[i] = COMPUTERMOVE;
            // showBoard(board);
-            // compute evaluation function for this move.
+            // bewertende funktion für diesen zug.
            int moveVal = minimax(board, 0, false);
            // printf("\n ++++ move Val= %d \n",moveVal);
 
 
 
-            // If the value of the current move is
-            // more than the best value, then update
-            // best/
+            // wenn der wert vom lauf der zuüge größer ist
+            // als der beste wert dann überschreibe diesen
             if (moveVal > bestVal) {
                 bestMove = i; //aktuelle Array Position
                 bestVal = moveVal;
@@ -266,7 +265,7 @@ int findBestMove(char board[9]) {
 //                printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 //                showBoard(board);
             }
-            // Undo the move
+            // mache den zug rückgängig
             board[i] = '_';
         }
 
@@ -307,8 +306,8 @@ void playTicTacToe(int nextTurn) {
             bool gueltig;
             int zahl;
 
-                // simple erste Implementierung mit Zufallszahl
-                if (computerwin || shouldDoRandomMove()){
+                // Implementierung mit Zufallszug und den besten Zug
+                if (computerWin || shouldDoRandomMove()){
                     printf("moveRandom");
                     zahl = moveRandom(board);
                 }else {
